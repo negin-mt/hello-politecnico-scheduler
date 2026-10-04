@@ -237,7 +237,7 @@ kubectl -n kube-system logs -l component=hello-politecnico-scheduler --tail=30 \
 
 ---
 
-## Live demo (for your professor)
+## Live demo
 
 Run these four steps with the cluster and scheduler already deployed:
 
