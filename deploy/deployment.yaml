@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-politecnico-scheduler
+  namespace: kube-system
+  labels:
+    component: hello-politecnico-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: hello-politecnico-scheduler
+  template:
+    metadata:
+      labels:
+        component: hello-politecnico-scheduler
+    spec:
+      serviceAccountName: hello-politecnico-scheduler
+      containers:
+        - name: hello-politecnico-scheduler
+          image: hello-politecnico-scheduler:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /usr/local/bin/kube-scheduler
+            - --config=/etc/kubernetes/scheduler-config.yaml
+            - --v=3
+          volumeMounts:
+            - name: config
+              mountPath: /etc/kubernetes
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 10259
+              scheme: HTTPS
+            initialDelaySeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 10259
+              scheme: HTTPS
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: config
+          configMap:
+            name: hello-politecnico-scheduler-config
+            items:
+              - key: scheduler-config.yaml
+                path: scheduler-config.yaml
