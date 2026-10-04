@@ -237,6 +237,53 @@ kubectl -n kube-system logs -l component=hello-politecnico-scheduler --tail=30 \
 
 ---
 
+## Live demo (for your professor)
+
+Run these four steps with the cluster and scheduler already deployed:
+
+```bash
+# 1) Show the custom scheduler is running
+kubectl -n kube-system get pods -l component=hello-politecnico-scheduler
+
+# 2) Delete the old test pod and create a fresh one (triggers Filter again)
+kubectl delete pod hello-politecnico-test --force --grace-period=0
+kubectl apply -f examples/test-pod.yaml
+
+# 3) Show it was scheduled by YOUR scheduler
+kubectl get pod hello-politecnico-test -o wide
+kubectl get pod hello-politecnico-test -o jsonpath='Scheduler={.spec.schedulerName}  Node={.spec.nodeName}{"\n"}'
+
+# 4) Show the Hello Politecnico log
+kubectl -n kube-system logs -l component=hello-politecnico-scheduler --tail=50 \
+  | grep "Hello Politecnico"
+```
+
+Expected log line:
+
+```text
+Hello Politecnico: evaluating node [hello-scheduler-control-plane] for pod [hello-politecnico-test]
+```
+
+**Talking points while demoing:**
+
+1. The pod sets `schedulerName: hello-politecnico-scheduler` (not the default scheduler).
+2. The Go `HelloPolitecnico` Filter plugin runs during the scheduling cycle.
+3. The log line proves the plugin evaluated the node and returned `Success`.
+
+Optional live follow (two terminals):
+
+```bash
+# Terminal A
+kubectl -n kube-system logs -l component=hello-politecnico-scheduler -f \
+  | grep --line-buffered "Hello Politecnico"
+
+# Terminal B
+kubectl delete pod hello-politecnico-test --force --grace-period=0
+kubectl apply -f examples/test-pod.yaml
+```
+
+---
+
 ## Troubleshooting
 
 | Symptom | Fix |
